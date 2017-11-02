@@ -1,47 +1,55 @@
-/*-----------------------------------------------------------------------------
-A simple echo bot for the Microsoft Bot Framework. 
------------------------------------------------------------------------------*/
-
-var restify = require('restify');
 var builder = require('botbuilder');
-var builder_cognitiveservices = require("botbuilder-cognitiveservices");
+var restify = require('restify');
 
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+    console.log('%s listening to %s', server.name, server.url);
 });
-  
-// Create chat connector for communicating with the Bot Framework Service
+
+// Create chat bot
 var connector = new builder.ChatConnector({
-    appId: process.env.MicrosoftAppId,
-    appPassword: process.env.MicrosoftAppPassword,
-    stateEndpoint: process.env.BotStateEndpoint,
-    openIdMetadata: process.env.BotOpenIdMetadata 
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
-// Listen for messages from users 
+const ChangePasswordOption = 'Change Password';
+const ResetPasswordOption = 'Reset Password';
+
+var bot = new builder.UniversalBot(connector, [
+    (session) => {
+        builder.Prompts.choice(session,
+            'What do yo want to do today?',
+            [ChangePasswordOption, ResetPasswordOption],
+            { listStyle: builder.ListStyle.button });
+    },
+    (session, result) => {
+        if (result.response) {
+            switch (result.response.entity) {
+                case ChangePasswordOption:
+                    session.send('This functionality is not yet implemented! Try resetting your password.');
+                    session.reset();
+                    break;
+                case ResetPasswordOption:
+                    session.beginDialog('resetPassword:/');
+                    break;
+            }
+        } else {
+            session.send(`I am sorry but I didn't understand that. I need you to select one of the options below`);
+        }
+    },
+    (session, result) => {
+        if (result.resume) {
+            session.send('You identity was not verified and your password cannot be reset');
+            session.reset();
+        }
+    }
+]);
+
+//Sub-Dialogs
+bot.library(require('./dialogs/reset-password'));
+
+//Validators
+bot.library(require('./validators'));
+
 server.post('/api/messages', connector.listen());
-
-/*----------------------------------------------------------------------------------------
-* Bot Storage: This is a great spot to register the private state storage for your bot. 
-* We provide adapters for Azure Table, CosmosDb, SQL Azure, or you can implement your own!
-* For samples and documentation, see: https://github.com/Microsoft/BotBuilder-Azure
-* ---------------------------------------------------------------------------------------- */
-
-// Create your bot with a function to receive messages from the user
-var bot = new builder.UniversalBot(connector);
-
-
-var recognizer = new builder_cognitiveservices.QnAMakerRecognizer({
-                knowledgeBaseId: process.env.QnAKnowledgebaseId, 
-    subscriptionKey: process.env.QnASubscriptionKey});
-
-var basicQnAMakerDialog = new builder_cognitiveservices.QnAMakerDialog({
-    recognizers: [recognizer],
-                defaultMessage: 'No match! Try changing the query terms!',
-                qnaThreshold: 0.3}
-);
-
-
-bot.dialog('/', basicQnAMakerDialog);
