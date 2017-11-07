@@ -25,39 +25,34 @@ server.post('/api/messages', connector.listen());
 
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
+   bot.dialog('createAlarm', [
     function (session) {
-        session.beginDialog('ensureProfile', session.userData.profile);
-    },
-    function (session, results) {
-        session.userData.profile = results.response; // Save user profile.
-        session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
-    }
-]);
-bot.dialog('ensureProfile', [
-    function (session, args, next) {
-        session.dialogData.profile = args || {}; // Set the profile or create the object.
-        if (!session.dialogData.profile.name) {
-            builder.Prompts.text(session, "What's your name?");
-        } else {
-            next(); // Skip if we already have this info.
-        }
+        session.dialogData.alarm = {};
+        builder.Prompts.text(session, "What would you like to name this alarm?");
     },
     function (session, results, next) {
         if (results.response) {
-            // Save user's name if we asked for it.
-            session.dialogData.profile.name = results.response;
-        }
-        if (!session.dialogData.profile.company) {
-            builder.Prompts.text(session, "What company do you work for?");
+            session.dialogData.name = results.response;
+            builder.Prompts.time(session, "What time would you like to set an alarm for?");
         } else {
-            next(); // Skip if we already have this info.
+            next();
         }
     },
     function (session, results) {
         if (results.response) {
-            // Save company name if we asked for it.
-            session.dialogData.profile.company = results.response;
+            session.dialogData.time = builder.EntityRecognizer.resolveTime([results.response]);
         }
-        session.endDialogWithResult({ response: session.dialogData.profile });
+
+        // Return alarm to caller  
+        if (session.dialogData.name && session.dialogData.time) {
+            session.endDialogWithResult({ 
+                response: { name: session.dialogData.name, time: session.dialogData.time } 
+            }); 
+        } else {
+            session.endDialogWithResult({
+                resumed: builder.ResumeReason.notCompleted
+            });
+        }
     }
+]);
 ]);
