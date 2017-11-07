@@ -23,45 +23,26 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
-// This bot ensures user's profile is up to date.
+// This is a dinner reservation bot that uses a waterfall technique to prompt users for input.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('greetings2');
+        session.send("Welcome to the dinner reservation.");
+        builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
     },
     function (session, results) {
-        session.userData.profile = results.response; // Save user profile.
-        session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
+        session.dialogData.reservationDate = builder.EntityRecognizer.resolveTime([results.response]);
+        builder.Prompts.text(session, "How many people are in your party?");
+    },
+    function (session, results) {
+        session.dialogData.partySize = results.response;
+        builder.Prompts.text(session, "Who's name will this reservation be under?");
+    },
+    function (session, results) {
+        session.dialogData.reservationName = results.response;
+
+        // Process request and display reservation details
+        session.send(`Reservation confirmed. Reservation details: <br/>Date/Time: ${session.dialogData.reservationDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.reservationName}`);
+        session.endDialog();
     }
 ]);
 
-// Ask the user for their name and greet them by name.
-bot.dialog('greetings2', [
-    function (session) {
-        session.beginDialog('askName');
-    },
-    function (session, results) {
-        session.endDialog(`Hello ${results.response}!`);
-    }
-]);
-bot.dialog('askName', [
-    function (session) {
-        builder.Prompts.text(session, 'Hi! What is your name my friend?');
-    },
-    function (session, results) {
-        session.endDialogWithResult(results);
-    }
-]);
-
-
-var recognizer = new builder_cognitiveservices.QnAMakerRecognizer({
-                knowledgeBaseId: process.env.QnAKnowledgebaseId, 
-    subscriptionKey: process.env.QnASubscriptionKey});
-
-var basicQnAMakerDialog = new builder_cognitiveservices.QnAMakerDialog({
-    recognizers: [recognizer],
-                defaultMessage: 'No match ! Try changing the query terms!',
-                qnaThreshold: 0.3}
-);
-
-
-bot.dialog('/', basicQnAMakerDialog);
