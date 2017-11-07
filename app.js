@@ -26,40 +26,19 @@ server.post('/api/messages', connector.listen());
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('ensureProfile', session.userData.profile);
+        session.beginDialog('greetings');
     },
-    function (session, results) {
-        session.userData.profile = results.response; // Save user profile.
-        session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
-    }
+   
 ]);
 
-bot.dialog('ensureProfile', [
-    function (session, args, next) {
-        session.dialogData.profile = args || {}; // Set the profile or create the object.
-        if (!session.dialogData.profile.name) {
-            builder.Prompts.text(session, "What is your name?");
-        } else {
-            next(); // Skip if we already have this info.
-        }
+bot.dialog('greetings', [
+    // Step 1
+    function (session) {
+        builder.Prompts.text(session, 'Hi! What is your name?');
     },
-    function (session, results, next) {
-        if (results.response) {
-            // Save user's name if we asked for it.
-            session.dialogData.profile.name = results.response;
-        }
-        if (!session.dialogData.profile.company) {
-            builder.Prompts.text(session, "What company do you work for  now ?");
-        } else {
-            next(); // Skip if we already have this info.
-        }
-    },
+    // Step 2
     function (session, results) {
-        if (results.response) {
-            // Save company name if we asked for it.
-            session.dialogData.profile.company = results.response;
-        }
-        session.endDialogWithResult({ response: session.dialogData.profile });
+        session.endDialog(`Hello ${results.response}!`);
     }
 ]);
 
