@@ -33,11 +33,12 @@ var bot = new builder.UniversalBot(connector, [
         session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
     }
 ]);
+
 bot.dialog('ensureProfile', [
     function (session, args, next) {
         session.dialogData.profile = args || {}; // Set the profile or create the object.
         if (!session.dialogData.profile.name) {
-            builder.Prompts.text(session, "What's your name?");
+            builder.Prompts.text(session, "What is your name?");
         } else {
             next(); // Skip if we already have this info.
         }
@@ -48,7 +49,7 @@ bot.dialog('ensureProfile', [
             session.dialogData.profile.name = results.response;
         }
         if (!session.dialogData.profile.company) {
-            builder.Prompts.text(session, "What company do you work for?");
+            builder.Prompts.text(session, "What company do you work for  now ?");
         } else {
             next(); // Skip if we already have this info.
         }
