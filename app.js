@@ -69,7 +69,10 @@ bot.dialog('orderDinner', [
         }
     }
 ])
-.triggerAction({
-    matches: /^Trig Act$/i,
-    confirmPrompt: "This will cancel your order. Are you sure?"
-});
+.endConversationAction(
+    "endOrderDinner", "Ok. Goodbye.",
+    {
+        matches: /^cancel$|^goodbye$/i,
+        confirmPrompt: "This will cancel your order. Are you sure?"
+    }
+);
