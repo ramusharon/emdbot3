@@ -83,3 +83,11 @@ bot.dialog('Amma', function (session, args, next) {
 .triggerAction({
     matches: /^Amma$/i,
 });
+
+// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
+bot.dialog('Tanav', function (session, args, next) {
+    session.endDialog("Hello  Tanav. <br/>what do you like");
+})
+.triggerAction({
+    matches: /^Tanav$/i,
+});
