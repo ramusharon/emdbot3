@@ -26,34 +26,34 @@ server.post('/api/messages', connector.listen());
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('getSalesData');
+        session.beginDialog('getDetails');
     },
    
 ]);
 
 var salesData = {
-    "west": {
-        units: 200,
-        total: "$6,000"
+    "Billerica": {
+        place: "Billerica",
+        park: "Winchestor park"
     },
-    "central": {
-        units: 100,
-        total: "$3,000"
+    "Rockland": {
+        place: "Rockland",
+        park: "Abington Park"
     },
-    "east": {
-        units: 300,
-        total: "$9,000"
+    "Sanfransisco": {
+        place: "Sanfransico",
+        park: "Golden Gate Bridge"
     }
 };
 
-bot.dialog('getSalesData', [
+bot.dialog('getDetails', [
     function (session) {
-        builder.Prompts.choice(session, "Which region would you like sales for?", salesData); 
+        builder.Prompts.choice(session, "Where do you want to go?", salesData); 
     },
     function (session, results) {
         if (results.response) {
             var region = salesData[results.response.entity];
-            session.send(`We sold ${region.units} units for a total of ${region.total}.`); 
+            session.send(`I want to go ${region.place} to have fun at ${region.park}.`); 
         } else {
             session.send("OK");
         }
@@ -66,4 +66,12 @@ bot.dialog('tryagain', function (session, args, next) {
 })
 .triggerAction({
     matches: /^tryagain$/i,
+});
+
+// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
+bot.dialog('mcc', function (session, args, next) {
+    session.endDialog("Miss you chala chala. <br/>Say again and again");
+})
+.triggerAction({
+    matches: /^mcc$/i,
 });
