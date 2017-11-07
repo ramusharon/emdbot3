@@ -26,53 +26,29 @@ server.post('/api/messages', connector.listen());
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('orderDinner');
+        session.beginDialog('phonePrompt');
     },
    
 ]);
-
-// This dialog help the user order dinner to be delivered to their hotel room.
-var dinnerMenu = {
-    "Potato Salad - $5.99": {
-        Description: "Potato Salad",
-        Price: 5.99
-    },
-    "Tuna Sandwich - $6.89": {
-        Description: "Tuna Sandwich",
-        Price: 6.89
-    },
-    "Clam Chowder - $4.50":{
-        Description: "Clam Chowder",
-        Price: 4.50
-    }
-};
-
-bot.dialog('orderDinner', [
-    function(session){
-        session.send("Lets order some dinner!");
-        builder.Prompts.choice(session, "Dinner menu:", dinnerMenu);
+// This dialog prompts the user for a phone number. 
+// It will re-prompt the user if the input does not match a pattern for phone number.
+bot.dialog('phonePrompt', [
+    function (session, args) {
+        if (args && args.reprompt) {
+            builder.Prompts.text(session, "Enter the number using a format of either: '(555) 123-4567' or '555-123-4567' or '5551234567'")
+        } else {
+            builder.Prompts.text(session, "What's your phone number?");
+        }
     },
     function (session, results) {
-        if (results.response) {
-            var order = dinnerMenu[results.response.entity];
-            var msg = `You ordered: ${order.Description} for a total of $${order.Price}.`;
-            session.dialogData.order = order;
-            session.send(msg);
-            builder.Prompts.text(session, "What is your room number?");
-        } 
-    },
-    function(session, results){
-        if(results.response){
-            session.dialogData.room = results.response;
-            var msg = `Thank you. Your order will be delivered to room #${session.dialogData.room}`;
-            session.endDialog(msg);
+        var matched = results.response.match(/\d+/g);
+        var number = matched ? matched.join('') : '';
+        if (number.length == 10 || number.length == 11) {
+            session.userData.phoneNumber = number; // Save the number.
+            session.endDialogWithResult({ response: number });
+        } else {
+            // Repeat the dialog
+            session.replaceDialog('phonePrompt', { reprompt: true });
         }
     }
-])
-.endConversationAction(
-    "endOrderDinner", "Ok. Goodbye.",
-    {
-        matches: /^cancel$|^goodbye$/i,
-        confirmPrompt: "This will cancel your order. Are you sure?"
-    }
-);
+]);
