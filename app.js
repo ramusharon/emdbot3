@@ -26,7 +26,7 @@ server.post('/api/messages', connector.listen());
 // This is a dinner reservation bot that uses a waterfall technique to prompt users for input.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.send("Welcome to the dinner reservation.");
+        session.send("Welcome to the dinner reservation .");
         builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
     },
     function (session, results) {
