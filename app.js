@@ -61,11 +61,11 @@ bot.dialog('getDetails', [
 ]);
 
 // The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
-bot.dialog('tryagain', function (session, args, next) {
-    session.endDialog("This is a bot that can help you make a dinner reservation. <br/>Please say 'next' to continue");
+bot.dialog('umma', function (session, args, next) {
+    session.endDialog("This is a bot that can take care my skype, when ever my wife wants to connect. <br/>Please say 'next' to continue");
 })
 .triggerAction({
-    matches: /^tryagain$/i,
+    matches: /^umma$/i,
 });
 
 // The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
@@ -74,4 +74,12 @@ bot.dialog('mcc', function (session, args, next) {
 })
 .triggerAction({
     matches: /^mcc$/i,
+});
+
+// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
+bot.dialog('Amma', function (session, args, next) {
+    session.endDialog("Cheppu. <br/>Emi Chesu unnavu");
+})
+.triggerAction({
+    matches: /^Amma$/i,
 });
