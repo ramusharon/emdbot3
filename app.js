@@ -23,32 +23,41 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
-// This is a dinner reservation bot that uses a waterfall technique to prompt users for input.
+// This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.send("Welcome to the dinner reservation.");
-        builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
+        session.beginDialog('ensureProfile', session.userData.profile);
     },
     function (session, results) {
-        session.dialogData.reservationDate = builder.EntityRecognizer.resolveTime([results.response]);
-        builder.Prompts.number(session, "How many people are in your party?");
+        session.userData.profile = results.response; // Save user profile.
+        session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
+    }
+]);
+bot.dialog('ensureProfile', [
+    function (session, args, next) {
+        session.dialogData.profile = args || {}; // Set the profile or create the object.
+        if (!session.dialogData.profile.name) {
+            builder.Prompts.text(session, "What's your name?");
+        } else {
+            next(); // Skip if we already have this info.
+        }
     },
-      
+    function (session, results, next) {
+        if (results.response) {
+            // Save user's name if we asked for it.
+            session.dialogData.profile.name = results.response;
+        }
+        if (!session.dialogData.profile.company) {
+            builder.Prompts.text(session, "What company do you work for?");
+        } else {
+            next(); // Skip if we already have this info.
+        }
+    },
     function (session, results) {
-        session.dialogData.partySize = results.response;
-        builder.Prompts.text(session, "Whose name will this reservation be under?");
-    },
-   
-   function (session, results) {
-        session.dialogData.reservationName = results.response;
-        builder.Prompts.text(session, "What is the name of the resturant location?");
-   },
-   
-    function (session, results) {       
-        session.dialogData.ResturantLocation = results.response;
-
-        // Process request and display reservation details
-        session.send(`Reservation confirmed. Reservation details: <br/>Date/Time: ${session.dialogData.reservationDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.reservationName} <br/>Resturant Location: ${session.dialogData.ResturantLocation}`);
-        session.endDialog();
+        if (results.response) {
+            // Save company name if we asked for it.
+            session.dialogData.profile.company = results.response;
+        }
+        session.endDialogWithResult({ response: session.dialogData.profile });
     }
 ]);
