@@ -26,13 +26,32 @@ server.post('/api/messages', connector.listen());
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('ensureProfile', session.userData.profile);
+        session.beginDialog('greetings');
     },
     function (session, results) {
         session.userData.profile = results.response; // Save user profile.
         session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
     }
 ]);
+
+// Ask the user for their name and greet them by name.
+bot.dialog('greetings', [
+    function (session) {
+        session.beginDialog('askName');
+    },
+    function (session, results) {
+        session.endDialog(`Hello ${results.response}!`);
+    }
+]);
+bot.dialog('askName', [
+    function (session) {
+        builder.Prompts.text(session, 'Hi! What is your name?');
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
+
 bot.dialog('ensureProfile', [
     function (session, args, next) {
         session.dialogData.profile = args || {}; // Set the profile or create the object.
