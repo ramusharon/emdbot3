@@ -70,6 +70,6 @@ bot.dialog('orderDinner', [
     }
 ])
 .triggerAction({
-    matches: /^order dinner$/i,
+    matches: /^Trig Act$/i,
     confirmPrompt: "This will cancel your order. Are you sure?"
 });
