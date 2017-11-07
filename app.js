@@ -26,68 +26,50 @@ server.post('/api/messages', connector.listen());
 // This bot ensures user's profile is up to date.
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.beginDialog('getDetails');
+        session.beginDialog('orderDinner');
     },
    
 ]);
 
-var salesData = {
-    "Billerica": {
-        place: "Billerica",
-        park: "Winchestor park"
+// This dialog help the user order dinner to be delivered to their hotel room.
+var dinnerMenu = {
+    "Potato Salad - $5.99": {
+        Description: "Potato Salad",
+        Price: 5.99
     },
-    "Rockland": {
-        place: "Rockland",
-        park: "Abington Park"
+    "Tuna Sandwich - $6.89": {
+        Description: "Tuna Sandwich",
+        Price: 6.89
     },
-    "Sanfransisco": {
-        place: "Sanfransico",
-        park: "Golden Gate Bridge"
+    "Clam Chowder - $4.50":{
+        Description: "Clam Chowder",
+        Price: 4.50
     }
 };
 
-bot.dialog('getDetails', [
-    function (session) {
-        builder.Prompts.choice(session, "Where do you want to go?", salesData); 
+bot.dialog('orderDinner', [
+    function(session){
+        session.send("Lets order some dinner!");
+        builder.Prompts.choice(session, "Dinner menu:", dinnerMenu);
     },
     function (session, results) {
         if (results.response) {
-            var region = salesData[results.response.entity];
-            session.send(`I want to go ${region.place} to have fun at ${region.park}.`); 
-        } else {
-            session.send("OK");
+            var order = dinnerMenu[results.response.entity];
+            var msg = `You ordered: ${order.Description} for a total of $${order.Price}.`;
+            session.dialogData.order = order;
+            session.send(msg);
+            builder.Prompts.text(session, "What is your room number?");
+        } 
+    },
+    function(session, results){
+        if(results.response){
+            session.dialogData.room = results.response;
+            var msg = `Thank you. Your order will be delivered to room #${session.dialogData.room}`;
+            session.endDialog(msg);
         }
     }
-]);
-
-// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
-bot.dialog('umma', function (session, args, next) {
-    session.endDialog("This is a bot that can take care my skype, when ever my wife wants to connect. <br/>Please say 'next' to continue");
-})
+])
 .triggerAction({
-    matches: /^umma$/i,
-});
-
-// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
-bot.dialog('mcc', function (session, args, next) {
-    session.endDialog("Miss you chala chala. <br/>Say again and again");
-})
-.triggerAction({
-    matches: /^mcc$/i,
-});
-
-// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
-bot.dialog('Amma', function (session, args, next) {
-    session.endDialog("Cheppu. <br/>Emi Chesu unnavu");
-})
-.triggerAction({
-    matches: /^Amma$/i,
-});
-
-// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
-bot.dialog('Tanav', function (session, args, next) {
-    session.endDialog("Hello  Tanav. <br/>what do you like");
-})
-.triggerAction({
-    matches: /^Tanav$/i,
+    matches: /^order dinner$/i,
+    confirmPrompt: "This will cancel your order. Are you sure?"
 });
