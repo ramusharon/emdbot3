@@ -61,3 +61,4 @@ bot.dialog('ensureProfile', [
         session.endDialogWithResult({ response: session.dialogData.profile });
     }
 ]);
+
