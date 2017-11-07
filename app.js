@@ -23,15 +23,36 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
-/*----------------------------------------------------------------------------------------
-* Bot Storage: This is a great spot to register the private state storage for your bot. 
-* We provide adapters for Azure Table, CosmosDb, SQL Azure, or you can implement your own!
-* For samples and documentation, see: https://github.com/Microsoft/BotBuilder-Azure
-* ---------------------------------------------------------------------------------------- */
+// This bot ensures user's profile is up to date.
+var bot = new builder.UniversalBot(connector, [
+    function (session) {
+        session.beginDialog('greetings');
+    },
+    function (session, results) {
+        session.userData.profile = results.response; // Save user profile.
+        session.send(`Hello ${session.userData.profile.name}! I love ${session.userData.profile.company}!`);
+    }
+]);
 
-// Create your bot with a function to receive messages from the user
-var bot = new builder.UniversalBot(connector);
+// Ask the user for their name and greet them by name.
+bot.dialog('greetings', [
+    function (session) {
+        session.beginDialog('askName');
+    },
+    function (session, results) {
+        session.endDialog(`Hello ${results.response}!`);
+    }
+]);
+bot.dialog('askName', [
+    function (session) {
+        builder.Prompts.text(session, 'Hi! What is your name?');
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
 
+<<<<<<< HEAD
 
 var recognizer = new builder_cognitiveservices.QnAMakerRecognizer({
                 knowledgeBaseId: process.env.QnAKnowledgebaseId, 
@@ -45,3 +66,33 @@ var basicQnAMakerDialog = new builder_cognitiveservices.QnAMakerDialog({
 
 
 bot.dialog('/', basicQnAMakerDialog);
+=======
+bot.dialog('ensureProfile', [
+    function (session, args, next) {
+        session.dialogData.profile = args || {}; // Set the profile or create the object.
+        if (!session.dialogData.profile.name) {
+            builder.Prompts.text(session, "What's your name?");
+        } else {
+            next(); // Skip if we already have this info.
+        }
+    },
+    function (session, results, next) {
+        if (results.response) {
+            // Save user's name if we asked for it.
+            session.dialogData.profile.name = results.response;
+        }
+        if (!session.dialogData.profile.company) {
+            builder.Prompts.text(session, "What company do you work for?");
+        } else {
+            next(); // Skip if we already have this info.
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // Save company name if we asked for it.
+            session.dialogData.profile.company = results.response;
+        }
+        session.endDialogWithResult({ response: session.dialogData.profile });
+    }
+]);
+>>>>>>> 13476ff80f02e03f0c2929fadcd0ef2e9b54d6dd
