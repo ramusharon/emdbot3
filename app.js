@@ -33,5 +33,4 @@ var bot = new builder.UniversalBot(connector, [
         session.endDialog(`Hello ${results.response}!`);
     }
 ]);
-]);
 
