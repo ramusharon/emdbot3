@@ -1,54 +1,72 @@
-/*-----------------------------------------------------------------------------
-A simple echo bot for the Microsoft Bot Framework. 
------------------------------------------------------------------------------*/
+// This loads the environment variables from the .env file
+require('dotenv-extended').load();
 
-var restify = require('restify');
 var builder = require('botbuilder');
-var builder_cognitiveservices = require("botbuilder-cognitiveservices");
+var restify = require('restify');
 
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
-});
-  
-// Create chat connector for communicating with the Bot Framework Service
-var connector = new builder.ChatConnector({
-    appId: process.env.MicrosoftAppId,
-    appPassword: process.env.MicrosoftAppPassword,
-    stateEndpoint: process.env.BotStateEndpoint,
-    openIdMetadata: process.env.BotOpenIdMetadata 
+    console.log('%s listening to %s', server.name, server.url);
 });
 
-// Listen for messages from users 
+// Create chat bot and listen for messages
+var connector = new builder.ChatConnector({
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
+});
 server.post('/api/messages', connector.listen());
 
-// This bot ensures user's profile is up to date.
-var bot = new builder.UniversalBot(connector, [
+var userStore = [];
+var bot = new builder.UniversalBot(connector, function (session) {
+    // store user's address
+    var address = session.message.address;
+    userStore.push(address);
+
+    // end current dialog
+    session.endDialog('You\'ve been invited to a survey! It will start in a few seconds...');
+});
+
+// Every 5 seconds, check for new registered users and start a new dialog
+setInterval(function () {
+    var newAddresses = userStore.splice(0);
+    newAddresses.forEach(function (address) {
+
+        console.log('Starting survey for address:', address);
+
+        // new conversation address, copy without conversationId
+        var newConversationAddress = Object.assign({}, address);
+        delete newConversationAddress.conversation;
+
+        // start survey dialog
+        bot.beginDialog(newConversationAddress, 'survey', null, function (err) {
+            if (err) {
+                // error ocurred while starting new conversation. Channel not supported?
+                bot.send(new builder.Message()
+                    .text('This channel does not support this operation: ' + err.message)
+                    .address(address));
+            }
+        });
+
+    });
+}, 5000);
+
+bot.dialog('survey', [
     function (session) {
-        session.beginDialog('phonePrompt');
-    },
-   
-]);
-// This dialog prompts the user for a phone number. 
-// It will re-prompt the user if the input does not match a pattern for phone number.
-bot.dialog('phonePrompt', [
-    function (session, args) {
-        if (args && args.reprompt) {
-            builder.Prompts.text(session, "Enter the number using a format of either: '(555) 123-4567' or '555-123-4567' or '5551234567'")
-        } else {
-            builder.Prompts.text(session, "What's your phone number?");
-        }
+        builder.Prompts.text(session, 'Hello... What\'s your name?');
     },
     function (session, results) {
-        var matched = results.response.match(/\d+/g);
-        var number = matched ? matched.join('') : '';
-        if (number.length == 10 || number.length == 11) {
-            session.userData.phoneNumber = number; // Save the number.
-            session.endDialogWithResult({ response: number });
-        } else {
-            // Repeat the dialog
-            session.replaceDialog('phonePrompt', { reprompt: true });
-        }
+        session.userData.name = results.response;
+        builder.Prompts.number(session, 'Hi ' + results.response + ', How many years have you been coding?');
+    },
+    function (session, results) {
+        session.userData.coding = results.response;
+        builder.Prompts.choice(session, 'What language do you code Node using? ', ['JavaScript', 'CoffeeScript', 'TypeScript']);
+    },
+    function (session, results) {
+        session.userData.language = results.response.entity;
+        session.endDialog('Got it... ' + session.userData.name +
+            ' you\'ve been programming for ' + session.userData.coding +
+            ' years and use ' + session.userData.language + '.');
     }
 ]);
