@@ -59,3 +59,11 @@ bot.dialog('getSalesData', [
         }
     }
 ]);
+
+// The dialog stack is cleared and this dialog is invoked when the user enters 'help'.
+bot.dialog('help', function (session, args, next) {
+    session.endDialog("This is a bot that can help you make a dinner reservation. <br/>Please say 'next' to continue");
+})
+.triggerAction({
+    matches: /^help$/i,
+});
