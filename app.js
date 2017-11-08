@@ -46,7 +46,7 @@ var bot = new builder.UniversalBot(connector, [
         savedListPrompt.beginDialog(session, {
             field: 'savedMessages',
             choicesPrompt: "What message would you like to send? Choose a saved message from the list or enter a new one.",
-            noChoicesPrompt: "What message would you like to send to us?"
+            noChoicesPrompt: "What message would you like to send to us ?"
         });
     },
     function (session, results) {
