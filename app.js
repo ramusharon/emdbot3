@@ -16,9 +16,6 @@ their choice to the list.
 * ---------------------------------------------------------------------------------------- */
 
 
-
-
-
 var restify = require('restify');
 var builder = require('botbuilder');
 var savedListPrompt = require('./savedListPrompt');
