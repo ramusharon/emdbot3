@@ -20,7 +20,7 @@ their choice to the list.
 var restify = require('restify');
 var builder = require('botbuilder');
 var savedListPrompt = require('./savedListPrompt');
-var meaningOfLife = require('./meaningOfLife'); 
+var meaningOfLife = require('./lib/meaningOfLife'); 
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
