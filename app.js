@@ -19,6 +19,7 @@ their choice to the list.
 var restify = require('restify');
 var builder = require('botbuilder');
 var savedListPrompt = require('./savedListPrompt');
+var meaningOfLife = require('./meaningOfLife'); 
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -37,20 +38,22 @@ var connector = new builder.ChatConnector({
 server.post('/api/messages', connector.listen());
 
 
+// Setup bot and define root waterfall
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        // Prompt for message to send
-        savedListPrompt.beginDialog(session, {
-            field: 'savedMessages',
-            choicesPrompt: "What message would you like to send? Choose a saved message from the list or enter a new one.",
-            noChoicesPrompt: "What message would you like to send to us ?"
-        });
+        // Ask user the meaning of life
+        meaningOfLife.beginDialog(session);
     },
     function (session, results) {
-        session.send("Sending message: " + results.response);
+        // Check their answer
+        if (results.response) {
+            session.send("That's correct! You are wise beyond your years...");
+        } else {
+            session.send("Sorry you couldn't figure it out. Everyone knows that the meaning of life is 42.");
+        }
     }
 ]);
 
 // Create prompts
-savedListPrompt.create(bot);
+meaningOfLife.create(bot);
 
