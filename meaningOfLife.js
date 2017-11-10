@@ -5,6 +5,7 @@ wish to invoke the prompt.
 -----------------------------------------------------------------------------*/
 
 
+
 var builder = require('botbuilder');
 
 exports.beginDialog = function (session, options) {

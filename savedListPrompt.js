@@ -3,8 +3,6 @@ Creates a prompt that lets a user save their responses for future use. The list
 will be saved to a field off session.userData. 
 -----------------------------------------------------------------------------*/
 
-
-
 var builder = require('botbuilder');
 
 exports.beginDialog = function (session, options) {
